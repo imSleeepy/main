@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Dashboard</title>
+    <link rel="shortcut icon" type="image/png" href="{% static 'images/icon.png' %}" >
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        .navbar-brand, .navbar-brand:hover {
+            color: white;
+            cursor: default;
+        }
+        .nav-item {
+            margin-left: 0.5rem;
+        }
+        .active, .active:hover {
+            background-color: black;
+            color: white;
+            padding: 0.5rem 1rem; 
+            border-radius: 5px; 
+        }
+        .nav-link {
+            color: white;
+        }
+        .logout-btn:hover {
+            background-color: darkred; 
+            color: white;
+            padding: 0.5rem 1rem; 
+            border-radius: 5px; 
+        }
+        .other-btn:hover {
+            background-color: rgb(24, 24, 24); 
+            color: white;
+            padding: 0.5rem 1rem; 
+            border-radius: 5px; 
+        }
+        .logout-btn {
+            background-color: red; 
+            color: white;
+            padding: 0.5rem 1rem; 
+            border-radius: 5px; 
+        }
+        .navbar-toggler {
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+        .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='rgba%28255, 255, 255, 1%29' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
+        }
+        .card-container {
+            margin-top: 100px; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: auto; 
+        }
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            width: 80%;
+        }
+        .list-group-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .list-group-item img {
+            margin-right: 10px;
+            max-width: 50px;
+            max-height: 50px;
+            border-radius: 5px;
+        }
+    </style>
+
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg bg-dark">
+        <a class="navbar-brand" href="{% url 'dashboard' %}">Capstone</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link active" href="{% url 'dashboard' %}">Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link other-btn" href="{% url 'uploaddocument' %}">Upload Document</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link other-btn" href="{% url 'proccessedimages' %}">Processed Documents</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link logout-btn" href="{% url 'logout' %}">Logout</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container card-container">
+        <div class="card ">
+            <div class="card-header text-center">
+                Dashboard
+            </div>
+            <div class="card-body">
+                <h3 class="card-title">Welcome to the Dashboard</h3>
+                <p class="card-text">Click the button to a upload document.</p>
+                <a href="{% url 'uploaddocument' %}" class="btn btn-primary">Upload Document</a>
+                <h6 class="mt-4">Documents Uploaded: {{ document_count }}</h6>
+                <h6 class="mt-4">Recent Documents</h6>
+                <ul class="list-group list-group-flush">
+                    {% for document in latest_documents %}
+                        <li class="list-group-item">
+                            <div style="display: flex; align-items: center;">
+                                {% if document.image_base64 %}
+                                    <img src="data:image/jpeg;base64,{{ document.image_base64 }}" alt="{{ document.image_name }}" style="margin-right: 10px; max-width: 50px; max-height: 50px; border-radius: 5px; cursor: pointer;" data-toggle="modal" data-target="#imageModal" onclick="setModalImage('data:image/jpeg;base64,{{ document.image_base64}}')">
+                                {% else %}
+                                    <img src="path/to/placeholder-image.jpg" alt="No Image" style="margin-right: 10px; max-width: 50px; max-height: 50px; border-radius: 5px;">
+                                {% endif %}
+                                {{ document.image_name }}
+                            </div>
+                            <form action="{% url 'view_details' document.id %}" method="post" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-link" style="color: blue; cursor: pointer;">View</button>
+                            </form>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="card-footer text-center">
+                Capstone 2024
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="imageModal" tabindex="-1" role="dialog" aria-labelledby="imageModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="imageModalLabel">Image Preview</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <img id="modalImage" src="#" alt="Image" class="img-fluid modal-image" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function setModalImage(imageSrc) {
+            document.getElementById('modalImage').src = imageSrc;
+        }
+
+        let sessionTimeout;
+        const timeoutDuration = 15 * 60 * 1000; 
+    
+        function resetTimer() {
+            clearTimeout(sessionTimeout);
+            sessionTimeout = setTimeout(logout, timeoutDuration);
+        }
+    
+        function logout() {
+            window.location.href = "{% url 'logout' %}"; 
+        }
+    
+        window.onload = resetTimer;
+        window.onmousemove = resetTimer;
+        window.onkeypress = resetTimer;
+
+        function setModalImage(src) {
+            document.getElementById('modalImage').src = src;
+        }
+    </script>
+    
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+ 
+</body>
+</html>

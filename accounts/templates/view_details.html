@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Detail View</title>
+    <link rel="shortcut icon" type="image/png" href="{% static 'images/icon.png' %}" >
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .navbar-brand, .navbar-brand:hover {
+            color: white;
+            cursor: default;
+        }
+        .nav-item {
+            margin-left: 0.5rem;
+        }
+        .active, .active:hover {
+            background-color: black;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+        }
+        .nav-link {
+            color: white;
+        }
+        .logout-btn:hover {
+            background-color: darkred;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+        }
+        .other-btn:hover {
+            background-color: rgb(24, 24, 24);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+        }
+        .logout-btn {
+            background-color: red;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+        }
+        .navbar-toggler-icon {
+            color: white;
+        }
+        .navbar-toggler {
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+        .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='rgba%28255, 255, 255, 1%29' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
+        }
+        .invoice-container {
+            width: 80%;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .data-section {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            margin-bottom: 20px;
+        }
+        .invoice-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .invoice-table, .invoice-table th, .invoice-table td {
+            border: 1px solid #ddd;
+        }
+        .invoice-table th, .invoice-table td {
+            padding: 10px;
+            text-align: left;
+        }
+        .invoice-table th {
+            background-color: #f8f8f8;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg bg-dark">
+        <a class="navbar-brand" href="{% url 'dashboard' %}">Capstone</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link other-btn" href="{% url 'dashboard' %}">Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link other-btn" href="{% url 'uploaddocument' %}">Upload Document</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="{% url 'proccessedimages' %}">Processed Documents</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link logout-btn" href="{% url 'logout' %}">Logout</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        {% if image_name %}
+            <div class="data-section">
+                <h3>Image Title: {{ image_name }}</h3> 
+                {% if image_data %}
+                    <img src="data:image/jpeg;base64,{{ image_data }}" alt="Uploaded Image"
+                        style="display: block; cursor: pointer; max-width: 100%; max-height: 300px; margin-top: 10px; margin-bottom: 10px; align-items: center; margin-left: auto; margin-right: auto;"
+                        data-toggle="modal" data-target="#imageModal" onclick="setModalImage('data:image/jpeg;base64,{{ image_data }}')" />
+                {% endif %}
+            </div>
+        {% endif %}
+
+        {% if extracted_data %}
+            <div class="data-section">
+                <form id="detailsForm" method="POST" action="{% url 'save_extracted_data2' pk=pk %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="image_name" value="{{ image_name }}">
+                    <input type="hidden" name="image_data" value="{{ image_data }}">
+                    <p></p>
+                    <h4>DETAILS:</h4>
+                    <table class="invoice-table">
+                        <tr>
+                            <th>Seller Name</th>
+                            <td><input type="text" name="seller_name" value="{{ extracted_data.seller.name }}" class="form-control"></td>
+                        </tr>
+                        <tr>
+                            <th>Client Name</th>
+                            <td><input type="text" name="client_name" value="{{ extracted_data.buyer.name }}" class="form-control"></td>
+                        </tr>
+                        <tr>
+                            <th>Invoice Number</th>
+                            <td><input type="text" name="invoice_number" value="{{ extracted_data.invoice_number }}" class="form-control"></td>
+                        </tr>
+                        <tr>
+                            <th>Invoice Date</th>
+                            <td><input type="text" name="invoice_date" value="{{ extracted_data.invoice_date }}" class="form-control"></td>
+                        </tr>
+                    </table>
+                    <p></p>
+                    <h4>ITEMS:</h4>
+                    <table class="invoice-table">
+                        <thead>
+                            <tr>
+                                <th>Description</th>
+                                <th>Quantity</th>
+                                <th>Unit Price</th>
+                                <th>Net Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in extracted_data.items %}
+                            <tr>
+                                <td><input type="text" name="items_description[]" value="{{ item.description }}" class="form-control"></td>
+                                <td><input type="text" name="items_quantity[]" value="{{ item.quantity }}" class="form-control"></td>
+                                <td><input type="text" name="items_unit_price[]" value="{{ item.unit_price }}" class="form-control"></td>
+                                <td><input type="text" name="items_net_price[]" value="{{ item.net_price }}" class="form-control"></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    <p></p>
+                    <h4>SUMMARY:</h4>
+                    <table class="invoice-table">
+                        <tr>
+                            <th>Total</th>
+                            <td><input type="text" name="total" value="{{ extracted_data.total }}" class="form-control"></td>
+                        </tr>
+                    </table>
+                    <button type="submit" class="btn btn-primary mt-3">Confirm</button>
+                </form>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="modal fade" id="imageModal" tabindex="-1" role="dialog" aria-labelledby="imageModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="imageModalLabel">Image Preview</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <img id="modalImage" src="#" alt="Image" class="img-fluid modal-image" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        function setModalImage(imageSrc) {
+            document.getElementById('modalImage').src = imageSrc;
+        }
+    </script>
+</body>
+</html>

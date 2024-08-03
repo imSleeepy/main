@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Processed Images</title>
+    <link rel="shortcut icon" type="image/png" href="{% static 'images/icon.png' %}" >
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .navbar-brand, .navbar-brand:hover {
+            color: white;
+            cursor: default;
+        }
+        .nav-item {
+            margin-left: 0.5rem;
+        }
+        .active, .active:hover {
+            background-color: black;
+            color: white;
+            padding: 0.5rem 1rem; 
+            border-radius: 5px; 
+        }
+        .nav-link {
+            color: white;
+        }
+        .logout-btn:hover {
+            background-color: darkred; 
+            color: white;
+            padding: 0.5rem 1rem; 
+            border-radius: 5px; 
+        }
+        .other-btn:hover {
+            background-color: rgb(24, 24, 24); 
+            color: white;
+            padding: 0.5rem 1rem; 
+            border-radius: 5px; 
+        }
+        .logout-btn {
+            background-color: red; 
+            color: white;
+            padding: 0.5rem 1rem; 
+            border-radius: 5px; 
+        }
+        .navbar-toggler {
+            border-color: rgba(255, 255, 255, 0.1); 
+        }
+        .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='rgba%28255, 255, 255, 1%29' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
+        }
+        .card-container {
+            margin-top: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 80vh;
+        }
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        .modal-body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            max-height: 80vh; 
+            overflow: auto; 
+            padding: 0; 
+        }
+        .modal-image {
+            max-width: 100%; 
+            max-height: 100%; 
+            margin-top: 150px;
+            height: auto; 
+            width: auto; 
+        }
+        .btn-options {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg bg-dark">
+        <a class="navbar-brand" href="{% url 'dashboard' %}">Capstone</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link other-btn" href="{% url 'dashboard' %}">Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link other-btn" href="{% url 'uploaddocument' %}">Upload Document</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="{% url 'proccessedimages' %}">Processed Documents</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link logout-btn" href="{% url 'logout' %}">Logout</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h1>Processed Documents</h1>
+            <div class="d-flex align-items-center">
+                <select id="sortSelect" class="form-control w-300 mr-2" style="margin-left: 250px;">
+                    <option value="asc">Sort by Oldest</option>
+                    <option value="desc">Sort by Newest</option>
+                </select>
+            </div>
+            <input type="text" id="searchInput" class="form-control w-25" placeholder="Search...">
+        </div>
+        
+        <div class="card">
+            <div class="card-body">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Image Name</th>
+                            <th>Image</th>
+                            <th>Seller Name</th>
+                            <th>Client Name</th>
+                            <th>Invoice Number</th>
+                            <th>Invoice Date</th>
+                            <th>Options</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        {% for details in details_list %}
+                        <tr data-id="{{ details.id }}">
+                            <td>{{ details.image_name }}</td>
+                            <td>
+                                {% if details.image_base64 %}
+                                    <a href="#" data-toggle="modal" data-target="#imageModal" data-image="data:image/jpeg;base64,{{ details.image_base64 }}">
+                                        <img src="data:image/jpeg;base64,{{ details.image_base64 }}" alt="{{ details.image_name }}" style="max-width: 200px; max-height: 150px;">
+                                    </a>
+                                {% else %}
+                                    No Image
+                                {% endif %}
+                            </td>
+                            <td>{{ details.seller_name }}</td>
+                            <td>{{ details.client_name }}</td>
+                            <td>{{ details.invoice_number }}</td>
+                            <td>{{ details.invoice_date }}</td>
+                            <td>
+                                <form action="{% url 'view_details' details.id %}" method="post" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-link" style="color: blue; cursor: pointer;">View</button>
+                                </form>
+                                <form action="{% url 'delete_details' details.id %}" method="post" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-link text-danger" style="cursor: pointer;" onclick="return confirm('Are you sure you want to delete this document?');">Delete</button>
+                                </form>
+                            </td>
+                            
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7">No processed documents available.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="imageModal" tabindex="-1" role="dialog" aria-labelledby="imageModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="imageModalLabel">Image Preview</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <img id="modalImage" src="#" alt="Image" class="img-fluid modal-image" />
+                </div>
+            </div>
+        </div> 
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        document.getElementById('searchInput').addEventListener('input', function() {
+            var filter = this.value.toLowerCase();
+            var rows = document.querySelectorAll('#tableBody tr');
+
+            rows.forEach(function(row) {
+                var cells = row.querySelectorAll('td');
+                var visible = Array.from(cells).some(function(cell) {
+                    return cell.textContent.toLowerCase().includes(filter);
+                });
+                row.style.display = visible ? '' : 'none';
+            });
+        });
+
+        document.getElementById('sortSelect').addEventListener('change', function() {
+            var sortOrder = this.value;
+            var rows = Array.from(document.querySelectorAll('#tableBody tr'));
+            rows.sort(function(a, b) {
+                var idA = parseInt(a.getAttribute('data-id'));
+                var idB = parseInt(b.getAttribute('data-id'));
+                return (sortOrder === 'asc') ? idA - idB : idB - idA;
+            });
+            var tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            rows.forEach(function(row) {
+                tbody.appendChild(row);
+            });
+        });
+
+        $('#imageModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget); 
+            var imageSrc = button.data('image'); 
+            var modal = $(this);
+            modal.find('#modalImage').attr('src', imageSrc); 
+        });
+    </script>
+</body>
+</html>

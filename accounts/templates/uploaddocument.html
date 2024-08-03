@@ -1,0 +1,402 @@
+<!DOCTYPE html> 
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Upload Images</title>
+    <link rel="shortcut icon" type="image/png" href="{% static 'images/icon.png' %}" >
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        .navbar-brand, .navbar-brand:hover {
+            color: white;
+            cursor: default;
+        }
+        .nav-item {
+            margin-left: 0.5rem;
+        }
+        .active, .active:hover {
+            background-color: black;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+        }
+        .nav-link {
+            color: white;
+        }
+        .logout-btn:hover {
+            background-color: darkred;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+        }
+        .other-btn:hover {
+            background-color: rgb(24, 24, 24);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+        }
+        .logout-btn {
+            background-color: red;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+        }
+        .navbar-toggler-icon {
+            color: white;
+        }
+        .navbar-toggler {
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+        .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='rgba%28255, 255, 255, 1%29' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
+        }        
+        .container-fluid {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 80vh; 
+        }
+        .card {
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        #imagePreview {
+            display: none;
+            max-width: 100%;
+            max-height: 300px;
+            margin-top: 10px;
+            margin-bottom: 10px; 
+            align-items: center;
+            cursor: pointer;
+        }
+        .center-content {
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+        #uploadForm {
+            display: none;
+            margin-bottom: 10px;
+        }
+        #browseButton{
+            margin-bottom: 10px; 
+        } 
+
+        .invoice-container { 
+            width: 80%;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .data-section { 
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            margin-bottom: 20px;
+        }
+        .invoice-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .invoice-table, .invoice-table th, .invoice-table td {
+            border: 1px solid #ddd;
+        }
+        .invoice-table th, .invoice-table td {
+            padding: 10px;
+            text-align: left;
+        }
+        .invoice-table th {
+            background-color: #f8f8f8;
+        }
+        .modal-body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            max-height: 80vh; 
+            overflow: auto; 
+            padding: 0; 
+        }
+        .modal-image {
+            max-width: 100%; 
+            max-height: 100%; 
+            margin-top: 150px;
+            height: auto; 
+            width: auto;
+        }
+        #progress-card {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1001;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+            max-width: 400px;
+            width: 90%;
+            background-color: #fff;
+        }
+
+        #progress-card .card-header {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+            text-align: center;
+            color: #333;
+        }
+
+        #progress-card .card-body {
+            text-align: center;
+        }
+
+        #overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }        
+    </style>
+</head>
+<body>
+    <!-- Nav Bar Start -->
+    <nav class="navbar navbar-expand-lg bg-dark">
+        <a class="navbar-brand" href="{% url 'dashboard' %}">Capstone</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link other-btn" href="{% url 'dashboard' %}">Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="{% url 'uploaddocument' %}">Upload Document</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link other-btn" href="{% url 'proccessedimages' %}">Processed Documents</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link logout-btn" href="{% url 'logout' %}">Logout</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <div class="invoice-container" id="invoice-container">
+        <div class="container-fluid">
+            <div class="card text-center" id="card-text-center">
+                <div class="card-header">
+                    Image Reader
+                </div>
+                <div class="card-body" id="dropArea" ondrop="dropHandler(event)" ondragover="dragOverHandler(event)">
+                    <h5 class="card-title">Drag & Drop Your Files Here</h5>
+                    <p class="card-text">Supported Formats: [TBD]</p>
+                
+                    <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="previewImage()">
+                    <button id="browseButton" class="btn btn-primary" onclick="document.getElementById('fileInput').click();">Browse Files</button>
+                
+                    <!-- Upload form, initially hidden -->
+                    <form id="uploadForm" method="POST" enctype="multipart/form-data" style="display: none;" class="invoice-form">
+                        {% csrf_token %}
+                        <input type="text" name="name" placeholder="Enter image name" class="form-control mb-2" required>
+                        <input type="file" name="image" id="actualFile" style="display: none;" required>
+
+                        <div id="imagePreviewContainer" class="center-content" style="display: none;">
+                            <img id="imagePreview" src="#" alt="Image Preview" class="mx-auto d-block"
+                                 data-toggle="modal" data-target="#imageModal" onclick="setModalImage(this.src)" />
+                        </div>
+                    
+                        <div id="uploadButtonContainer" class="center-content" style="display: none;">
+                            <button id="uploadButton" type="submit" class="btn btn-success mx-auto d-block">Upload File</button>
+                        </div>
+
+                    </form>
+                </div>
+                <div class="card-footer text-muted">
+                    Capstone 2024
+                </div>
+            </div>
+        </div>
+
+        {% if raw_text %}
+            <div class="data-section">
+                <h3>Image Title: {{ image_name }}</h3> 
+
+                {% if image_data %}
+                    <img src="data:image/jpeg;base64,{{ image_data }}" alt="Uploaded Image"
+                        style="display: block; cursor: pointer; max-width: 100%; max-height: 300px; margin-top: 10px; margin-bottom: 10px; align-items: center; margin-left: auto; margin-right: auto;"
+                        data-toggle="modal" data-target="#imageModal" onclick="setModalImage('data:image/jpeg;base64,{{ image_data }}')" />
+                {% endif %}
+            </div>
+        {% endif %}
+
+        {% if extracted_data %}
+        <div class="data-section">
+            <form id="detailsForm" method="POST" action="{% url 'save_extracted_data' %}">
+                {% csrf_token %}
+                <input type="hidden" name="image_name" value="{{ image_name }}">
+                <input type="hidden" name="image_data" value="{{ image_data }}">
+                <p></p>
+                <h4>DETAILS:</h4>
+                <table class="invoice-table">
+                    <tr>
+                        <th>Seller Name</th>
+                        <td><input type="text" name="seller_name" value="{{ extracted_data.seller.name }}" class="form-control"></td>
+                    </tr>
+                    <tr>
+                        <th>Client Name</th>
+                        <td><input type="text" name="client_name" value="{{ extracted_data.buyer.name }}" class="form-control"></td>
+                    </tr>
+                    <tr>
+                        <th>Invoice Number</th>
+                        <td><input type="text" name="invoice_number" value="{{ extracted_data.invoice_number }}" class="form-control"></td>
+                    </tr>
+                    <tr>
+                        <th>Invoice Date</th>
+                        <td><input type="text" name="invoice_date" value="{{ extracted_data.invoice_date }}" class="form-control"></td>
+                    </tr>
+                </table>
+                <p></p>
+                <h4>ITEMS:</h4>
+                <table class="invoice-table">
+                    <thead>
+                        <tr>
+                            <th>Description</th>
+                            <th>Quantity</th>
+                            <th>Unit Price</th>
+                            <th>Net Price</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in extracted_data.items %}
+                        <tr>
+                            <td><input type="text" name="items_description[]" value="{{ item.description }}" class="form-control"></td>
+                            <td><input type="text" name="items_quantity[]" value="{{ item.quantity }}" class="form-control"></td>
+                            <td><input type="text" name="items_unit_price[]" value="{{ item.unit_price }}" class="form-control"></td>
+                            <td><input type="text" name="items_net_price[]" value="{{ item.net_price }}" class="form-control"></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <p></p>
+                <h4>SUMMARY:</h4>
+                <table class="invoice-table">
+                    <tr>
+                        <th>Total</th>
+                        <td><input type="text" name="total" value="{{ extracted_data.total }}" class="form-control"></td>
+                    </tr>
+                </table>
+                <button type="submit" class="btn btn-primary mt-3">Confirm</button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="modal fade" id="imageModal" tabindex="-1" role="dialog" aria-labelledby="imageModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="imageModalLabel">Image Preview</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <img id="modalImage" src="#" alt="Image" class="img-fluid modal-image" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="progress-card" class="card" style="display: none;">
+        <div class="card-header">Processing...</div>
+        <div class="card-body">
+            <p>Please wait while your document is being processed.</p>
+        </div>
+    </div>
+
+    <div id="overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000;"></div>
+
+    <script>
+    function showProgressCard() {
+        document.getElementById('progress-card').style.display = 'block';
+        document.getElementById('overlay').style.display = 'block';
+    }
+    
+    function hideProgressCard() {
+        document.getElementById('progress-card').style.display = 'none';
+        document.getElementById('overlay').style.display = 'none';
+    }
+
+    document.querySelector('.invoice-form').addEventListener('submit', function() {
+        showProgressCard();
+    });
+        
+
+    function setModalImage(src) {
+    document.getElementById('modalImage').src = src;
+    }   
+
+    function previewImage() {
+        const fileInput = document.getElementById('fileInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+        const uploadForm = document.getElementById('uploadForm');
+        const uploadButtonContainer = document.getElementById('uploadButtonContainer');
+
+        if (fileInput.files && fileInput.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                imagePreview.src = e.target.result;
+                imagePreviewContainer.style.display = 'block';
+                uploadButtonContainer.style.display = 'block';
+                uploadForm.style.display = 'block'; 
+                document.getElementById('actualFile').files = fileInput.files; 
+            }
+            reader.readAsDataURL(fileInput.files[0]);
+        }
+    }
+
+    function dragOverHandler(event) {
+        event.preventDefault(); 
+    }
+
+    function dropHandler(event) {
+        event.preventDefault(); 
+        const fileInput = document.getElementById('fileInput');
+        const dt = event.dataTransfer;
+        const files = dt.files;
+
+        if (files.length) {
+            fileInput.files = files; 
+            previewImage(); 
+        }
+    }
+
+    let sessionTimeout;
+    const timeoutDuration = 15 * 60 * 1000; 
+
+    function resetTimer() {
+        clearTimeout(sessionTimeout);
+        sessionTimeout = setTimeout(logout, timeoutDuration);
+    }
+
+    function logout() {
+        window.location.href = "{% url 'logout' %}";
+    }
+
+    window.onload = resetTimer;
+    window.onmousemove = resetTimer;
+    window.onkeypress = resetTimer;
+    </script>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
